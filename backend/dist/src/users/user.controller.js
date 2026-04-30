@@ -14,27 +14,61 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const user_service_1 = require("./user.service");
+const current_user_decorator_1 = require("../common/decorators/current-user.decorator");
 let UserController = class UserController {
     userService;
     constructor(userService) {
         this.userService = userService;
     }
-    register(body) {
-        return {
-            message: 'User registered successfully',
-            data: body,
-        };
+    findById(body) {
+        return this.userService.findById(body.id);
+    }
+    findByEmail(body) {
+        return this.userService.findByEmail(body.email);
+    }
+    create(body) {
+        return this.userService.create(body);
+    }
+    profile(id) {
+        return this.userService.profile(id);
     }
 };
 exports.UserController = UserController;
 __decorate([
-    (0, common_1.Post)('register'),
+    (0, common_1.Get)('findById'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
-], UserController.prototype, "register", null);
+], UserController.prototype, "findById", null);
+__decorate([
+    (0, common_1.Get)('findByEmail'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "findByEmail", null);
+__decorate([
+    (0, common_1.Post)('create'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)('profile'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "profile", null);
 exports.UserController = UserController = __decorate([
     (0, common_1.Injectable)(),
     (0, common_1.Controller)('users'),
