@@ -1,15 +1,6 @@
-import {
-  Controller,
-  Body,
-  Injectable,
-  HttpCode,
-  HttpStatus,
-  Post,
-} from '@nestjs/common';
+import { Controller, Body, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-// import { JwtAuthGuard } from './jwt-auth.guard';
 
-@Injectable()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

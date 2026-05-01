@@ -3,7 +3,6 @@ import {
   Post,
   Get,
   Body,
-  Injectable,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -13,7 +12,6 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserService } from './user.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
-@Injectable()
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
