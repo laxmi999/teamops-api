@@ -4,7 +4,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './users/user.module';
-import { ProjectsModule } from './projects/projects.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminUserModule } from './admin-users/admin-user.module';
 
@@ -15,7 +14,6 @@ import { AdminUserModule } from './admin-users/admin-user.module';
     }),
     PrismaModule,
     UserModule,
-    ProjectsModule,
     AuthModule,
     AdminUserModule,
   ],

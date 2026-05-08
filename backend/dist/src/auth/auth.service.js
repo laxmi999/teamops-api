@@ -45,13 +45,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
+const prisma_service_1 = require("../prisma/prisma.service");
 const user_service_1 = require("../users/user.service");
 const bcrypt = __importStar(require("bcrypt"));
 let AuthService = class AuthService {
     jwtService;
+    prisma;
     userService;
-    constructor(jwtService, userService) {
+    constructor(jwtService, prisma, userService) {
         this.jwtService = jwtService;
+        this.prisma = prisma;
         this.userService = userService;
     }
     async register(body) {
@@ -71,27 +74,70 @@ let AuthService = class AuthService {
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
-        const token = this.generateToken(user.id.toString(), user.email);
-        return {
-            user: {
-                id: user.id,
-                email: user.email,
+        const payload = { sub: user.id, email: user.email };
+        const token = this.jwtService.sign(payload);
+        const refreshToken = this.jwtService.sign(payload, {
+            secret: process.env.JWT_REFRESH_SECRET,
+            expiresIn: '7d',
+        });
+        const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                refreshToken: hashedRefreshToken,
             },
+        });
+        return {
             access_token: token,
+            refresh_token: refreshToken,
         };
+    }
+    async refresh(refreshToken) {
+        try {
+            const payload = this.jwtService.verify(refreshToken, {
+                secret: process.env.JWT_REFRESH_SECRET,
+            });
+            const user = await this.prisma.user.findUnique({
+                where: { id: payload.sub },
+            });
+            if (!user || !user.refreshToken) {
+                throw new common_1.UnauthorizedException('Invalid refresh token');
+            }
+            const isRefreshTokenValid = await bcrypt.compare(refreshToken, user.refreshToken);
+            if (!isRefreshTokenValid) {
+                throw new common_1.UnauthorizedException('Invalid refresh token');
+            }
+            const newPayload = { sub: user.id, email: user.email };
+            const newAccessToken = this.jwtService.sign(newPayload);
+            const newRefreshToken = this.jwtService.sign(newPayload, {
+                secret: process.env.JWT_REFRESH_SECRET,
+                expiresIn: '7d',
+            });
+            const hashedNewRefreshToken = await bcrypt.hash(newRefreshToken, 10);
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    refreshToken: hashedNewRefreshToken,
+                },
+            });
+            return {
+                access_token: newAccessToken,
+                refresh_token: newRefreshToken,
+            };
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException(error);
+        }
     }
     async validateUser(id) {
         return this.userService.findById(id);
-    }
-    generateToken(userId, email) {
-        const payload = { sub: userId, email: email };
-        return this.jwtService.sign(payload);
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [jwt_1.JwtService,
+        prisma_service_1.PrismaService,
         user_service_1.UserService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

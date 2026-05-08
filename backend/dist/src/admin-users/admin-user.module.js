@@ -11,7 +11,6 @@ const common_1 = require("@nestjs/common");
 const admin_user_controller_1 = require("./admin-user.controller");
 const admin_user_service_1 = require("./admin-user.service");
 const prisma_module_1 = require("../prisma/prisma.module");
-const prisma_service_1 = require("../prisma/prisma.service");
 let AdminUserModule = class AdminUserModule {
 };
 exports.AdminUserModule = AdminUserModule;
@@ -19,7 +18,7 @@ exports.AdminUserModule = AdminUserModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
         controllers: [admin_user_controller_1.AdminUserController],
-        providers: [admin_user_service_1.AdminUserService, prisma_service_1.PrismaService],
+        providers: [admin_user_service_1.AdminUserService],
         exports: [admin_user_service_1.AdminUserService],
     })
 ], AdminUserModule);

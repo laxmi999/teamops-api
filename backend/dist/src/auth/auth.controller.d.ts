@@ -14,10 +14,13 @@ export declare class AuthController {
         email: string;
         password: string;
     }): Promise<{
-        user: {
-            id: number;
-            email: string;
-        };
         access_token: string;
+        refresh_token: string;
+    }>;
+    refresh(body: {
+        refreshToken: string;
+    }): Promise<{
+        access_token: string;
+        refresh_token: string;
     }>;
 }
