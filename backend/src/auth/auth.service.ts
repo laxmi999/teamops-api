@@ -3,11 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserService } from '../users/user.service';
 import * as bcrypt from 'bcrypt';
-
-interface JwtPayload {
-  sub: number;
-  email: string;
-}
+import { JwtPayload } from './types/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -110,9 +106,18 @@ export class AuthService {
         access_token: newAccessToken,
         refresh_token: newRefreshToken,
       };
-    } catch (error) {
-      throw new UnauthorizedException(error);
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  async logout(userId: number) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        refreshToken: null,
+      },
+    });
   }
 
   async validateUser(id: number) {

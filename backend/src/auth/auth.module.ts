@@ -18,7 +18,7 @@ import type { StringValue } from 'ms';
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: {
-        expiresIn: (process.env.JWT_EXPIRES_IN as StringValue) || '1h',
+        expiresIn: (process.env.JWT_EXPIRES_IN as StringValue) || '15m',
       },
     }),
   ],

@@ -27,6 +27,7 @@ export class UserController {
   findByEmail(@Body() body: { email: string }) {
     return this.userService.findByEmail(body.email);
   }
+
   @Post('create')
   @HttpCode(HttpStatus.CREATED)
   create(@Body() body: { email: string; password: string }) {
