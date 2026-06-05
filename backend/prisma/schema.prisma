@@ -24,29 +24,55 @@ enum TaskStatus {
   DONE
 }
 
+model Team {
+  id Int @id @default(autoincrement())
+  name String
+  projects Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
 model User {
   id        Int       @id @default(autoincrement())
   email     String    @unique
   password  String
   role      Role      @default(USER)
-  projects  Project[]
-
   refreshToken String?
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+
+  memberships ProjectMember[]
 
   assignedTasks Task[] @relation("UserAssignedTasks")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Project {
   id        Int      @id @default(autoincrement())
   name      String
-  ownerId   Int
-  owner     User     @relation(fields: [ownerId], references: [id])
+
+  teamId   Int
+  team     Team     @relation(fields: [teamId], references: [id])
+
+  members ProjectMember[]
+
   tasks     Task[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ProjectMember {
+  userId Int
+  projectId Int
+
+  user User @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+
+  joinedAt DateTime @default(now())
+
+  @@id([userId, projectId])
 }
 
 model Task {
