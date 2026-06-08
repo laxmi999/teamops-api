@@ -10,6 +10,23 @@ import * as bcrypt from 'bcrypt';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  async profile(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID '${id}' not found`);
+    }
+
+    return user;
+  }
+
   // Find a user by email
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
@@ -19,6 +36,10 @@ export class UserService {
 
   // Find a user by ID
   async findById(id: number) {
+    if (id == null) {
+      throw new NotFoundException('User ID is required');
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -33,7 +54,6 @@ export class UserService {
     return user;
   }
 
-  // Create a new user
   async create(body: { email: string; password: string }) {
     const userExists = await this.findByEmail(body.email);
 
@@ -51,26 +71,8 @@ export class UserService {
       select: {
         id: true,
         email: true,
-        role: true,
       },
     });
-
-    return user;
-  }
-
-  async profile(id: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-      },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`User with ID '${id}' not found`);
-    }
 
     return user;
   }

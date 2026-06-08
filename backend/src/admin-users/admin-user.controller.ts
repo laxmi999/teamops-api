@@ -26,6 +26,12 @@ export class AdminUserController {
     return this.adminUserService.allUsers();
   }
 
+  @Post('create')
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() body: { email: string; password: string; role?: Role }) {
+    return this.adminUserService.create(body);
+  }
+
   @Post('updateRole')
   @HttpCode(HttpStatus.OK)
   async updateRole(@Body() body: { userId: number; role: Role }) {
