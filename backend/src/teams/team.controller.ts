@@ -5,6 +5,7 @@ import {
   Body,
   UseGuards,
   Param,
+  ParseIntPipe,
   //   Patch,
   //   Delete,
 } from '@nestjs/common';
@@ -24,14 +25,13 @@ export class TeamController {
     return this.teamService.create(body);
   }
 
-  @Get('findAll')
+  @Get()
   findAll() {
     return this.teamService.findAll();
   }
 
-  @Get('findById/:id')
-  findById(@Param('id') id: number) {
-    console.log('Finding team with ID:', id); // Debug log
+  @Get('/:id')
+  findById(@Param('id', ParseIntPipe) id: number) {
     return this.teamService.findById(id);
   }
 }
