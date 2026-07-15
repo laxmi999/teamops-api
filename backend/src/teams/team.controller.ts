@@ -6,23 +6,26 @@ import {
   UseGuards,
   Param,
   ParseIntPipe,
-  //   Patch,
-  //   Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { TeamService } from './team.service';
+import { CreateTeamDto } from './dto/create-team.dto';
+import { AddTeamMemberDto } from './dto/add-team-member.dto';
 
 @Controller('teams')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN')
 export class TeamController {
   constructor(private readonly teamService: TeamService) {}
 
-  @Post('create')
-  create(@Body() body: { name: string }) {
-    return this.teamService.create(body);
+  @Post()
+  @Roles('ADMIN', 'MANAGER')
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() dto: CreateTeamDto) {
+    return this.teamService.create(dto);
   }
 
   @Get()
@@ -30,8 +33,23 @@ export class TeamController {
     return this.teamService.findAll();
   }
 
-  @Get('/:id')
+  @Get(':id')
   findById(@Param('id', ParseIntPipe) id: number) {
     return this.teamService.findById(id);
+  }
+
+  @Post(':id/members')
+  @Roles('ADMIN', 'MANAGER')
+  @HttpCode(HttpStatus.CREATED)
+  addMember(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AddTeamMemberDto,
+  ) {
+    return this.teamService.addMember(id, dto.userId);
+  }
+
+  @Get(':id/members')
+  listMembers(@Param('id', ParseIntPipe) id: number) {
+    return this.teamService.listMembers(id);
   }
 }

@@ -15,7 +15,6 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    // Hash once in UserService.create — do not hash here.
     return this.userService.create({
       email: dto.email,
       password: dto.password,
