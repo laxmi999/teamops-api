@@ -116,9 +116,7 @@ export class TaskService {
       where: { userId_projectId: { userId, projectId } },
     });
     if (!membership) {
-      throw new BadRequestException(
-        'Assignee must be a member of the project',
-      );
+      throw new BadRequestException('Assignee must be a member of the project');
     }
   }
 }
