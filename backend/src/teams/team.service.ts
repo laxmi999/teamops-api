@@ -24,7 +24,6 @@ export class TeamService {
 
   // Get a team by ID
   async findById(id: number) {
-    console.log('SERVICEEE Finding team with ID:', id); // Debug log
     return this.prisma.team.findUnique({
       where: { id },
       select: { id: true, name: true },

@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UserService } from '../users/user.service';
 import * as bcrypt from 'bcrypt';
 import { JwtPayload } from './types/jwt-payload.interface';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -13,16 +14,12 @@ export class AuthService {
     private userService: UserService,
   ) {}
 
-  // Register a new user
-  async register(body: { email: string; password: string }) {
-    const hashedPassword = await bcrypt.hash(body.password, 10);
-
-    const user = await this.userService.create({
-      email: body.email,
-      password: hashedPassword,
+  async register(dto: RegisterDto) {
+    // Hash once in UserService.create — do not hash here.
+    return this.userService.create({
+      email: dto.email,
+      password: dto.password,
     });
-
-    return user;
   }
 
   async login(email: string, password: string) {
@@ -112,12 +109,15 @@ export class AuthService {
   }
 
   async logout(userId: number) {
+    console.log('userId', userId);
     await this.prisma.user.update({
       where: { id: userId },
       data: {
         refreshToken: null,
       },
     });
+
+    return { message: 'Logged out successfully' };
   }
 
   async validateUser(id: number) {
