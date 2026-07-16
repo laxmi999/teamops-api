@@ -3,38 +3,47 @@ import {
   HttpStatus,
   Post,
   Get,
+  Patch,
   Body,
+  Param,
+  ParseIntPipe,
   Controller,
   UseGuards,
 } from '@nestjs/common';
-// import { PrismaService } from '../prisma/prisma.service';
-import { Role } from '@prisma/client';
 import { AdminUserService } from './admin-user.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { Actor } from '../common/types/actor.type';
+import { CreateAdminUserDto } from './dto/create-admin-user.dto';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 
-@Controller('admin-users')
+@Controller('admin/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 export class AdminUserController {
   constructor(private adminUserService: AdminUserService) {}
 
-  @Get('allUsers')
+  @Get()
   @HttpCode(HttpStatus.OK)
-  async allUsers() {
+  allUsers() {
     return this.adminUserService.allUsers();
   }
 
-  @Post('create')
+  @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() body: { email: string; password: string; role?: Role }) {
-    return this.adminUserService.create(body);
+  create(@Body() dto: CreateAdminUserDto) {
+    return this.adminUserService.create(dto);
   }
 
-  @Post('updateRole')
+  @Patch(':id/role')
   @HttpCode(HttpStatus.OK)
-  async updateRole(@Body() body: { userId: number; role: Role }) {
-    return this.adminUserService.updateRole(body.userId, body.role);
+  updateRole(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateUserRoleDto,
+    @CurrentUser() actor: Actor,
+  ) {
+    return this.adminUserService.updateRole(id, dto.role, actor.id);
   }
 }
