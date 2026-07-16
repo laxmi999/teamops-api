@@ -12,6 +12,8 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { Actor } from '../common/types/actor.type';
 import { TeamService } from './team.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { AddTeamMemberDto } from './dto/add-team-member.dto';
@@ -24,18 +26,18 @@ export class TeamController {
   @Post()
   @Roles('ADMIN', 'MANAGER')
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() dto: CreateTeamDto) {
-    return this.teamService.create(dto);
+  create(@Body() dto: CreateTeamDto, @CurrentUser() actor: Actor) {
+    return this.teamService.create(dto, actor);
   }
 
   @Get()
-  findAll() {
-    return this.teamService.findAll();
+  findAll(@CurrentUser() actor: Actor) {
+    return this.teamService.findAll(actor);
   }
 
   @Get(':id')
-  findById(@Param('id', ParseIntPipe) id: number) {
-    return this.teamService.findById(id);
+  findById(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: Actor) {
+    return this.teamService.findById(id, actor);
   }
 
   @Post(':id/members')
@@ -44,12 +46,16 @@ export class TeamController {
   addMember(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AddTeamMemberDto,
+    @CurrentUser() actor: Actor,
   ) {
-    return this.teamService.addMember(id, dto.userId);
+    return this.teamService.addMember(id, dto.userId, actor);
   }
 
   @Get(':id/members')
-  listMembers(@Param('id', ParseIntPipe) id: number) {
-    return this.teamService.listMembers(id);
+  listMembers(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() actor: Actor,
+  ) {
+    return this.teamService.listMembers(id, actor);
   }
 }

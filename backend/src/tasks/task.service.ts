@@ -2,11 +2,15 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
-import { Prisma, TaskStatus } from '@prisma/client';
+import { Prisma, Role, TaskStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessService } from '../common/access/access.service';
+import type { Actor } from '../common/types/actor.type';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 
 const taskSelect = {
   id: true,
@@ -24,17 +28,14 @@ const taskSelect = {
 
 @Injectable()
 export class TaskService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private access: AccessService,
+  ) {}
 
-  async create(dto: CreateTaskDto) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: dto.projectId },
-    });
-    if (!project) {
-      throw new NotFoundException(`Project with ID ${dto.projectId} not found`);
-    }
-
-    await this.assertProjectMember(dto.projectId, dto.assigneeId);
+  async create(dto: CreateTaskDto, actor: Actor) {
+    await this.access.assertProjectAccess(actor, dto.projectId);
+    await this.assertAssigneeIsProjectMember(dto.projectId, dto.assigneeId);
 
     return this.prisma.task.create({
       data: {
@@ -49,15 +50,19 @@ export class TaskService {
     });
   }
 
-  async findAll(projectId?: number) {
+  async findAll(actor: Actor, projectId?: number) {
+    if (projectId !== undefined) {
+      await this.access.assertProjectAccess(actor, projectId);
+    }
+
     return this.prisma.task.findMany({
-      where: projectId !== undefined ? { projectId } : undefined,
+      where: this.access.taskListFilter(actor, projectId),
       select: taskSelect,
       orderBy: { id: 'asc' },
     });
   }
 
-  async findById(id: number) {
+  async findById(id: number, actor: Actor) {
     const task = await this.prisma.task.findUnique({
       where: { id },
       select: taskSelect,
@@ -67,14 +72,18 @@ export class TaskService {
       throw new NotFoundException(`Task with ID ${id} not found`);
     }
 
+    await this.access.assertProjectAccess(actor, task.projectId);
     return task;
   }
 
-  async update(id: number, dto: UpdateTaskDto) {
-    const existing = await this.findById(id);
+  async update(id: number, dto: UpdateTaskDto, actor: Actor) {
+    const existing = await this.findById(id, actor);
 
     if (dto.assigneeId !== undefined) {
-      await this.assertProjectMember(existing.projectId, dto.assigneeId);
+      await this.assertAssigneeIsProjectMember(
+        existing.projectId,
+        dto.assigneeId,
+      );
     }
 
     const data: Prisma.TaskUpdateInput = {};
@@ -100,13 +109,35 @@ export class TaskService {
     });
   }
 
-  async remove(id: number) {
-    await this.findById(id);
+  async remove(id: number, actor: Actor) {
+    await this.findById(id, actor);
     await this.prisma.task.delete({ where: { id } });
     return { message: `Task ${id} deleted` };
   }
 
-  private async assertProjectMember(projectId: number, userId: number) {
+  /** Assignees (or ADMIN) may update only the task status. */
+  async updateStatus(id: number, dto: UpdateTaskStatusDto, actor: Actor) {
+    const task = await this.findById(id, actor);
+
+    const isAssignee = task.assigneeId === actor.id;
+    const isAdmin = actor.role === Role.ADMIN;
+    if (!isAssignee && !isAdmin) {
+      throw new ForbiddenException(
+        'Only the task assignee can change the status',
+      );
+    }
+
+    return this.prisma.task.update({
+      where: { id },
+      data: { status: dto.status },
+      select: taskSelect,
+    });
+  }
+
+  private async assertAssigneeIsProjectMember(
+    projectId: number,
+    userId: number,
+  ) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);

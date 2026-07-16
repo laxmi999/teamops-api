@@ -5,6 +5,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessService } from '../common/access/access.service';
+import type { Actor } from '../common/types/actor.type';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
@@ -18,15 +20,13 @@ const projectSelect = {
 
 @Injectable()
 export class ProjectService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private access: AccessService,
+  ) {}
 
-  async create(dto: CreateProjectDto) {
-    const team = await this.prisma.team.findUnique({
-      where: { id: dto.teamId },
-    });
-    if (!team) {
-      throw new NotFoundException(`Team with ID ${dto.teamId} not found`);
-    }
+  async create(dto: CreateProjectDto, actor: Actor) {
+    await this.access.assertTeamAccess(actor, dto.teamId);
 
     return this.prisma.project.create({
       data: { name: dto.name, teamId: dto.teamId },
@@ -34,21 +34,27 @@ export class ProjectService {
     });
   }
 
-  async findAll(teamId?: number) {
+  async findAll(actor: Actor, teamId?: number) {
+    if (teamId !== undefined) {
+      await this.access.assertTeamAccess(actor, teamId);
+    }
+
     return this.prisma.project.findMany({
-      where: teamId !== undefined ? { teamId } : undefined,
+      where: this.access.projectListFilter(actor, teamId),
       select: projectSelect,
       orderBy: { id: 'asc' },
     });
   }
 
-  async findById(id: number) {
+  async findById(id: number, actor: Actor) {
+    await this.access.assertProjectAccess(actor, id);
+
     const project = await this.prisma.project.findUnique({
       where: { id },
       select: {
         ...projectSelect,
         team: { select: { id: true, name: true } },
-        _count: { select: { members: true, tasks: true } },
+        _count: true,
       },
     });
 
@@ -59,8 +65,8 @@ export class ProjectService {
     return project;
   }
 
-  async update(id: number, dto: UpdateProjectDto) {
-    await this.findById(id);
+  async update(id: number, dto: UpdateProjectDto, actor: Actor) {
+    await this.access.assertProjectAccess(actor, id);
 
     if (!dto.name) {
       throw new BadRequestException('No fields to update');
@@ -73,15 +79,15 @@ export class ProjectService {
     });
   }
 
-  async remove(id: number) {
-    await this.findById(id);
+  async remove(id: number, actor: Actor) {
+    await this.access.assertProjectAccess(actor, id);
 
     await this.prisma.project.delete({ where: { id } });
     return { message: `Project ${id} deleted` };
   }
 
-  async addMember(projectId: number, userId: number) {
-    const project = await this.findById(projectId);
+  async addMember(projectId: number, userId: number, actor: Actor) {
+    const project = await this.findById(projectId, actor);
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
@@ -116,8 +122,8 @@ export class ProjectService {
     });
   }
 
-  async listMembers(projectId: number) {
-    await this.findById(projectId);
+  async listMembers(projectId: number, actor: Actor) {
+    await this.access.assertProjectAccess(actor, projectId);
 
     return this.prisma.projectMember.findMany({
       where: { projectId },

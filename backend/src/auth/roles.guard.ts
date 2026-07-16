@@ -3,6 +3,7 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
@@ -32,7 +33,7 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     if (!user?.id) {
-      throw new ForbiddenException('User not authenticated');
+      throw new UnauthorizedException('User not authenticated');
     }
 
     const dbUser = await this.prisma.user.findUnique({
@@ -40,7 +41,7 @@ export class RolesGuard implements CanActivate {
     });
 
     if (!dbUser) {
-      throw new ForbiddenException('User not found');
+      throw new UnauthorizedException('User not found');
     }
 
     if (!requiredRoles.includes(dbUser.role)) {
