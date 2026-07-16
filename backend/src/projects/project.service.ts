@@ -29,8 +29,15 @@ export class ProjectService {
     await this.access.assertTeamAccess(actor, dto.teamId);
 
     return this.prisma.project.create({
-      data: { name: dto.name, teamId: dto.teamId },
-      select: projectSelect,
+      data: {
+        name: dto.name,
+        teamId: dto.teamId,
+        members: { create: { userId: actor.id } },
+      },
+      select: {
+        ...projectSelect,
+        members: { select: { userId: true } },
+      },
     });
   }
 
