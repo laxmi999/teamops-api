@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { setupSwagger } from './swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,8 +15,12 @@ async function bootstrap() {
     }),
   );
 
+  setupSwagger(app);
+
   await app.listen(3000, '0.0.0.0');
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  const url = await app.getUrl();
+  console.log(`Application is running on: ${url}`);
+  console.log(`Swagger UI: ${url}/docs`);
 }
 bootstrap().catch((err) => {
   console.error('Error starting the application:', err);
