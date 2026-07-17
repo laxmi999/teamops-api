@@ -12,7 +12,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('profile')
-  profile(@CurrentUser('id') id: number) {
-    return this.userService.profile(id);
+  profile(@CurrentUser('id') userId: number) {
+    return this.userService.profile(userId);
   }
 }

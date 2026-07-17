@@ -10,9 +10,9 @@ import * as bcrypt from 'bcrypt';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async profile(id: number) {
+  async profile(userId: number) {
     const user = await this.prisma.user.findUnique({
-      where: { id: id },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
@@ -21,7 +21,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundException(`User with ID '${id}' not found`);
+      throw new NotFoundException(`User with ID '${userId}' not found`);
     }
 
     return user;
