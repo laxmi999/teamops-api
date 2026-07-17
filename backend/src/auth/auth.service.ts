@@ -5,6 +5,7 @@ import { UserService } from '../users/user.service';
 import * as bcrypt from 'bcrypt';
 import { JwtPayload } from './types/jwt-payload.interface';
 import { RegisterDto } from './dto/register.dto';
+import { Actor } from '../common/types/actor.type';
 
 @Injectable()
 export class AuthService {
@@ -108,7 +109,6 @@ export class AuthService {
   }
 
   async logout(userId: number) {
-    console.log('userId', userId);
     await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -119,7 +119,29 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
-  async validateUser(id: number) {
-    return this.userService.findById(id);
+  async validateActiveSession(id: number): Promise<Actor> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        refreshToken: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    if (!user.refreshToken) {
+      throw new UnauthorizedException('Session expired');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    };
   }
 }
