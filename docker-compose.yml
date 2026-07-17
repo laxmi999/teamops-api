@@ -20,7 +20,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3000:3000"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/teamops
       JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-access-secret-32b}
