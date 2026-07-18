@@ -10,7 +10,7 @@ import {
   Controller,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminUserService } from './admin-user.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -30,18 +30,21 @@ export class AdminUserController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'List all users' })
   allUsers() {
     return this.adminUserService.allUsers();
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a user (admin)' })
   create(@Body() dto: CreateAdminUserDto) {
     return this.adminUserService.create(dto);
   }
 
   @Patch(':id/role')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update a user role' })
   updateRole(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserRoleDto,

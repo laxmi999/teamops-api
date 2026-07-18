@@ -1,5 +1,5 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserService } from './user.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -12,6 +12,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('profile')
+  @ApiOperation({ summary: 'Get the authenticated user profile' })
   profile(@CurrentUser('id') userId: number) {
     return this.userService.profile(userId);
   }

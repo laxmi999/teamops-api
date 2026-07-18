@@ -9,7 +9,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -29,16 +29,19 @@ export class TeamController {
   @Post()
   @Roles('ADMIN', 'MANAGER')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a team' })
   create(@Body() dto: CreateTeamDto, @CurrentUser() actor: Actor) {
     return this.teamService.create(dto, actor);
   }
 
   @Get()
+  @ApiOperation({ summary: 'List teams you can access' })
   findAll(@CurrentUser() actor: Actor) {
     return this.teamService.findAll(actor);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a team by ID' })
   findById(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: Actor) {
     return this.teamService.findById(id, actor);
   }
@@ -46,6 +49,7 @@ export class TeamController {
   @Post(':id/members')
   @Roles('ADMIN', 'MANAGER')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Add a member to a team' })
   addMember(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AddTeamMemberDto,
@@ -55,6 +59,7 @@ export class TeamController {
   }
 
   @Get(':id/members')
+  @ApiOperation({ summary: 'List members of a team' })
   listMembers(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() actor: Actor,

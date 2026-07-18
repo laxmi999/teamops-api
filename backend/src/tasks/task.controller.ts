@@ -12,7 +12,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -33,11 +33,16 @@ export class TaskController {
   @Post()
   @Roles('ADMIN', 'MANAGER')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a task in a project' })
   create(@Body() dto: CreateTaskDto, @CurrentUser() actor: Actor) {
     return this.taskService.create(dto, actor);
   }
 
   @Get()
+  @ApiOperation({
+    summary: 'List tasks you can access',
+    description: 'Optional query: projectId to filter by project.',
+  })
   findAll(@CurrentUser() actor: Actor, @Query('projectId') projectId?: string) {
     const parsed =
       projectId !== undefined && projectId !== ''
@@ -50,11 +55,16 @@ export class TaskController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a task by ID' })
   findById(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: Actor) {
     return this.taskService.findById(id, actor);
   }
 
   @Patch(':id/status')
+  @ApiOperation({
+    summary: 'Update task status',
+    description: 'Allowed for the assignee or an ADMIN.',
+  })
   updateStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateTaskStatusDto,
@@ -65,6 +75,7 @@ export class TaskController {
 
   @Patch(':id')
   @Roles('ADMIN', 'MANAGER')
+  @ApiOperation({ summary: 'Update a task' })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateTaskDto,
@@ -76,6 +87,7 @@ export class TaskController {
   @Delete(':id')
   @Roles('ADMIN', 'MANAGER')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a task' })
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() actor: Actor) {
     return this.taskService.remove(id, actor);
   }
