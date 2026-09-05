@@ -135,6 +135,23 @@ Full reference: Swagger UI at `/docs`.
 
 ---
 
+## Tests
+
+Requires a running Postgres and `backend/.env` (same as local development).
+
+```bash
+cd backend
+npm test          # unit tests
+npm run test:e2e  # HTTP tests (auth + protected routes)
+```
+
+E2E coverage today:
+
+- **Auth:** register/login tokens, unauthenticated 401, 401 after logout, refresh rotation (old refresh token rejected), invalid refresh 401
+- **Teams:** USER cannot create (403); MANAGER create/list/get; non-member isolation (403 / omitted from list); add member, duplicate 409, unknown user 404
+
+---
+
 ## Project layout
 
 ```text

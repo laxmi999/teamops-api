@@ -1,3 +1,4 @@
+import { createHash, randomUUID } from 'crypto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -39,12 +40,15 @@ export class AuthService {
 
     const token = this.jwtService.sign(payload);
 
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: '7d',
-    });
+    const refreshToken = this.jwtService.sign(
+      { ...payload, jti: randomUUID() },
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: '7d',
+      },
+    );
 
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    const hashedRefreshToken = await this.hashRefreshToken(refreshToken);
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -74,7 +78,7 @@ export class AuthService {
       }
 
       const isRefreshTokenValid = await bcrypt.compare(
-        refreshToken,
+        this.digestRefreshToken(refreshToken),
         user.refreshToken,
       );
 
@@ -85,12 +89,15 @@ export class AuthService {
       const newPayload = { sub: user.id, email: user.email };
 
       const newAccessToken = this.jwtService.sign(newPayload);
-      const newRefreshToken = this.jwtService.sign(newPayload, {
-        secret: process.env.JWT_REFRESH_SECRET,
-        expiresIn: '7d',
-      });
+      const newRefreshToken = this.jwtService.sign(
+        { ...newPayload, jti: randomUUID() },
+        {
+          secret: process.env.JWT_REFRESH_SECRET,
+          expiresIn: '7d',
+        },
+      );
 
-      const hashedNewRefreshToken = await bcrypt.hash(newRefreshToken, 10);
+      const hashedNewRefreshToken = await this.hashRefreshToken(newRefreshToken);
 
       await this.prisma.user.update({
         where: { id: user.id },
@@ -143,5 +150,14 @@ export class AuthService {
       email: user.email,
       role: user.role,
     };
+  }
+
+  // bcrypt only uses the first 72 bytes; JWTs share a long common prefix.
+  private digestRefreshToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private hashRefreshToken(token: string): Promise<string> {
+    return bcrypt.hash(this.digestRefreshToken(token), 10);
   }
 }
