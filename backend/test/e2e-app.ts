@@ -36,12 +36,17 @@ export async function registerAndLogin(
     .send({ email, password })
     .expect(200);
 
-  const token = login.body.access_token as string;
+  const loginBody = login.body as {
+    access_token: string;
+    refresh_token: string;
+  };
+  const token = loginBody.access_token;
 
   const profile = await request(app.getHttpServer())
     .get('/users/profile')
     .set('Authorization', `Bearer ${token}`)
     .expect(200);
 
-  return { token, id: profile.body.id as number };
+  const profileBody = profile.body as { id: number };
+  return { token, id: profileBody.id };
 }

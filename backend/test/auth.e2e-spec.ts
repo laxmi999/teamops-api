@@ -56,8 +56,8 @@ describe('Auth (e2e)', () => {
 
     expect(res.body).toEqual(
       expect.objectContaining({
-        access_token: expect.any(String),
-        refresh_token: expect.any(String),
+        access_token: expect.any(String) as string,
+        refresh_token: expect.any(String) as string,
       }),
     );
   });
@@ -72,7 +72,11 @@ describe('Auth (e2e)', () => {
       .send({ email, password })
       .expect(200);
 
-    const token = login.body.access_token as string;
+    const loginBody = login.body as {
+      access_token: string;
+      refresh_token: string;
+    };
+    const token = loginBody.access_token;
 
     // Still logged in — profile works
     await request(app.getHttpServer())
@@ -98,23 +102,31 @@ describe('Auth (e2e)', () => {
       .send({ email, password })
       .expect(200);
 
-    const oldRefresh = login.body.refresh_token as string;
+    const loginBody = login.body as {
+      access_token: string;
+      refresh_token: string;
+    };
+    const oldRefresh = loginBody.refresh_token;
 
     const refreshed = await request(app.getHttpServer())
       .post('/auth/refresh')
       .send({ refreshToken: oldRefresh })
       .expect(200);
 
-    expect(refreshed.body).toEqual(
+    const refreshedBody = refreshed.body as {
+      access_token: string;
+      refresh_token: string;
+    };
+    expect(refreshedBody).toEqual(
       expect.objectContaining({
-        access_token: expect.any(String),
-        refresh_token: expect.any(String),
+        access_token: expect.any(String) as string,
+        refresh_token: expect.any(String) as string,
       }),
     );
 
     await request(app.getHttpServer())
       .get('/users/profile')
-      .set('Authorization', `Bearer ${refreshed.body.access_token}`)
+      .set('Authorization', `Bearer ${refreshedBody.access_token}`)
       .expect(200);
 
     await request(app.getHttpServer())
