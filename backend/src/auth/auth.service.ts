@@ -97,7 +97,8 @@ export class AuthService {
         },
       );
 
-      const hashedNewRefreshToken = await this.hashRefreshToken(newRefreshToken);
+      const hashedNewRefreshToken =
+        await this.hashRefreshToken(newRefreshToken);
 
       await this.prisma.user.update({
         where: { id: user.id },
