@@ -89,7 +89,14 @@ export class ProjectService {
   async remove(id: number, actor: Actor) {
     await this.access.assertProjectAccess(actor, id);
 
-    await this.prisma.project.delete({ where: { id } });
+    await this.prisma.$transaction([
+      this.prisma.task.updateMany({
+        where: { projectId: id },
+        data: { projectId: undefined },
+      }),
+      this.prisma.projectMember.deleteMany({ where: { projectId: id } }),
+      this.prisma.project.delete({ where: { id } }),
+    ]);
     return { message: `Project ${id} deleted` };
   }
 

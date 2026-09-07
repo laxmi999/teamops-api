@@ -92,8 +92,8 @@ model Task {
   dueDate     DateTime?
   assigneeId  Int
   assignee    User       @relation("UserAssignedTasks", fields: [assigneeId], references: [id])
-  projectId   Int
-  project     Project    @relation(fields: [projectId], references: [id])
+  projectId   Int?
+  project     Project?   @relation(fields: [projectId], references: [id])
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }

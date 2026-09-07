@@ -72,6 +72,13 @@ export class TaskService {
       throw new NotFoundException(`Task with ID ${id} not found`);
     }
 
+    if (task.projectId === null) {
+      if (!this.access.isAdmin(actor)) {
+        throw new ForbiddenException('You do not have access to this task');
+      }
+      return task;
+    }
+
     await this.access.assertProjectAccess(actor, task.projectId);
     return task;
   }
@@ -79,7 +86,7 @@ export class TaskService {
   async update(id: number, dto: UpdateTaskDto, actor: Actor) {
     const existing = await this.findById(id, actor);
 
-    if (dto.assigneeId !== undefined) {
+    if (dto.assigneeId !== undefined && existing.projectId !== null) {
       await this.assertAssigneeIsProjectMember(
         existing.projectId,
         dto.assigneeId,
