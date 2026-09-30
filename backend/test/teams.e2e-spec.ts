@@ -86,7 +86,7 @@ describe('Teams (e2e)', () => {
       .set('Authorization', `Bearer ${manager.token}`)
       .expect(200);
 
-    expect(list.body).toEqual(
+    expect((list.body as { data: unknown[] }).data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: teamId, name: teamName }),
       ]),
@@ -108,7 +108,7 @@ describe('Teams (e2e)', () => {
       .set('Authorization', `Bearer ${outsider.token}`)
       .expect(200);
 
-    expect(list.body).not.toEqual(
+    expect((list.body as { data: unknown[] }).data).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ id: teamId })]),
     );
 
