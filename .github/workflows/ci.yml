@@ -13,11 +13,11 @@ defaults:
 jobs:
   quality:
     name: Lint, build, unit tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -33,7 +33,7 @@ jobs:
 
   e2e:
     name: E2E tests (Postgres)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16
@@ -53,9 +53,9 @@ jobs:
       JWT_SECRET: ci-only-not-a-real-secret
       JWT_REFRESH_SECRET: ci-only-not-a-real-secret-2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
