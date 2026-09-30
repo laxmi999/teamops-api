@@ -8,9 +8,11 @@ import { Prisma, Role, TaskStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessService } from '../common/access/access.service';
 import type { Actor } from '../common/types/actor.type';
+import { paginate, skipTake } from '../common/pagination/paginate';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { ListTasksQueryDto } from './dto/list-tasks.query.dto';
 
 const taskSelect = {
   id: true,
@@ -50,16 +52,26 @@ export class TaskService {
     });
   }
 
-  async findAll(actor: Actor, projectId?: number) {
-    if (projectId !== undefined) {
-      await this.access.assertProjectAccess(actor, projectId);
+  async findAll(actor: Actor, query: ListTasksQueryDto) {
+    if (query.projectId !== undefined) {
+      await this.access.assertProjectAccess(actor, query.projectId);
     }
 
-    return this.prisma.task.findMany({
-      where: this.access.taskListFilter(actor, projectId),
-      select: taskSelect,
-      orderBy: { id: 'asc' },
-    });
+    const where = this.access.taskListFilter(actor, query.projectId);
+
+    const [data, total] = await Promise.all([
+      this.prisma.task.findMany({
+        where,
+        select: taskSelect,
+        orderBy: {
+          [query.sortBy]: query.order,
+        } as Prisma.TaskOrderByWithRelationInput,
+        ...skipTake(query),
+      }),
+      this.prisma.task.count({ where }),
+    ]);
+
+    return paginate(data, total, query);
   }
 
   async findById(id: number, actor: Actor) {

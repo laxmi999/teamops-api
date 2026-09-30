@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Body,
+  Query,
   UseGuards,
   Param,
   ParseIntPipe,
@@ -18,6 +19,7 @@ import type { Actor } from '../common/types/actor.type';
 import { TeamService } from './team.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { AddTeamMemberDto } from './dto/add-team-member.dto';
+import { ListTeamsQueryDto } from './dto/list-teams.query.dto';
 
 @ApiTags('teams')
 @ApiBearerAuth('JWT')
@@ -35,9 +37,13 @@ export class TeamController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List teams you can access' })
-  findAll(@CurrentUser() actor: Actor) {
-    return this.teamService.findAll(actor);
+  @ApiOperation({
+    summary: 'List teams you can access (paginated)',
+    description:
+      'Query: page (default 1), limit (default 20, max 100), sortBy (id | name | createdAt), order (asc | desc).',
+  })
+  findAll(@Query() query: ListTeamsQueryDto, @CurrentUser() actor: Actor) {
+    return this.teamService.findAll(actor, query);
   }
 
   @Get(':id')

@@ -3,10 +3,13 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessService } from '../common/access/access.service';
 import type { Actor } from '../common/types/actor.type';
+import { paginate, skipTake } from '../common/pagination/paginate';
 import { CreateTeamDto } from './dto/create-team.dto';
+import { ListTeamsQueryDto } from './dto/list-teams.query.dto';
 
 @Injectable()
 export class TeamService {
@@ -26,12 +29,22 @@ export class TeamService {
     });
   }
 
-  async findAll(actor: Actor) {
-    return this.prisma.team.findMany({
-      where: this.access.teamListFilter(actor),
-      select: { id: true, name: true, createdAt: true },
-      orderBy: { id: 'asc' },
-    });
+  async findAll(actor: Actor, query: ListTeamsQueryDto) {
+    const where = this.access.teamListFilter(actor);
+
+    const [data, total] = await Promise.all([
+      this.prisma.team.findMany({
+        where,
+        select: { id: true, name: true, createdAt: true },
+        orderBy: {
+          [query.sortBy]: query.order,
+        } as Prisma.TeamOrderByWithRelationInput,
+        ...skipTake(query),
+      }),
+      this.prisma.team.count({ where }),
+    ]);
+
+    return paginate(data, total, query);
   }
 
   async findById(id: number, actor: Actor) {

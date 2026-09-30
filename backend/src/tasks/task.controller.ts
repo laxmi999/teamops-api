@@ -22,6 +22,7 @@ import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { ListTasksQueryDto } from './dto/list-tasks.query.dto';
 
 @ApiTags('tasks')
 @ApiBearerAuth('JWT')
@@ -40,18 +41,12 @@ export class TaskController {
 
   @Get()
   @ApiOperation({
-    summary: 'List tasks you can access',
-    description: 'Optional query: projectId to filter by project.',
+    summary: 'List tasks you can access (paginated)',
+    description:
+      'Query: projectId filter; page (default 1), limit (default 20, max 100), sortBy (id | title | status | dueDate | createdAt | updatedAt), order (asc | desc).',
   })
-  findAll(@CurrentUser() actor: Actor, @Query('projectId') projectId?: string) {
-    const parsed =
-      projectId !== undefined && projectId !== ''
-        ? Number(projectId)
-        : undefined;
-    return this.taskService.findAll(
-      actor,
-      parsed !== undefined && !Number.isNaN(parsed) ? parsed : undefined,
-    );
+  findAll(@Query() query: ListTasksQueryDto, @CurrentUser() actor: Actor) {
+    return this.taskService.findAll(actor, query);
   }
 
   @Get(':id')

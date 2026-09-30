@@ -22,6 +22,7 @@ import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { AddProjectMemberDto } from './dto/add-project-member.dto';
+import { ListProjectsQueryDto } from './dto/list-projects.query.dto';
 
 @ApiTags('projects')
 @ApiBearerAuth('JWT')
@@ -40,16 +41,12 @@ export class ProjectController {
 
   @Get()
   @ApiOperation({
-    summary: 'List projects you can access',
-    description: 'Optional query: teamId to filter by team.',
+    summary: 'List projects you can access (paginated)',
+    description:
+      'Query: teamId filter; page (default 1), limit (default 20, max 100), sortBy (id | name | createdAt | updatedAt), order (asc | desc).',
   })
-  findAll(@CurrentUser() actor: Actor, @Query('teamId') teamId?: string) {
-    const parsed =
-      teamId !== undefined && teamId !== '' ? Number(teamId) : undefined;
-    return this.projectService.findAll(
-      actor,
-      parsed !== undefined && !Number.isNaN(parsed) ? parsed : undefined,
-    );
+  findAll(@Query() query: ListProjectsQueryDto, @CurrentUser() actor: Actor) {
+    return this.projectService.findAll(actor, query);
   }
 
   @Get(':id')
