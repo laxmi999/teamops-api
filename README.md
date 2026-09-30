@@ -1,5 +1,7 @@
 # TeamOps API
 
+![CI](https://github.com/laxmi999/teamops-api/actions/workflows/ci.yml/badge.svg)
+
 REST API for managing **teams**, **projects**, and **tasks**, with JWT authentication, role-based access (`ADMIN` / `MANAGER` / `USER`), and membership-based resource isolation.
 
 Stack: NestJS, Prisma, PostgreSQL. Interactive docs at `/docs`.
