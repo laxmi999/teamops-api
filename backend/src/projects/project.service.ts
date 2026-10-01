@@ -4,11 +4,14 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessService } from '../common/access/access.service';
 import type { Actor } from '../common/types/actor.type';
+import { paginate, skipTake } from '../common/pagination/paginate';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { ListProjectsQueryDto } from './dto/list-projects.query.dto';
 
 const projectSelect = {
   id: true,
@@ -41,16 +44,26 @@ export class ProjectService {
     });
   }
 
-  async findAll(actor: Actor, teamId?: number) {
-    if (teamId !== undefined) {
-      await this.access.assertTeamAccess(actor, teamId);
+  async findAll(actor: Actor, query: ListProjectsQueryDto) {
+    if (query.teamId !== undefined) {
+      await this.access.assertTeamAccess(actor, query.teamId);
     }
 
-    return this.prisma.project.findMany({
-      where: this.access.projectListFilter(actor, teamId),
-      select: projectSelect,
-      orderBy: { id: 'asc' },
-    });
+    const where = this.access.projectListFilter(actor, query.teamId);
+
+    const [data, total] = await Promise.all([
+      this.prisma.project.findMany({
+        where,
+        select: projectSelect,
+        orderBy: {
+          [query.sortBy]: query.order,
+        } as Prisma.ProjectOrderByWithRelationInput,
+        ...skipTake(query),
+      }),
+      this.prisma.project.count({ where }),
+    ]);
+
+    return paginate(data, total, query);
   }
 
   async findById(id: number, actor: Actor) {

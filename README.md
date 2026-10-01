@@ -33,6 +33,7 @@ docker compose up --build -d
 - **Projects:** CRUD under a team; members must already belong to the team
 - **Tasks:** CRUD under a project; optional `dueDate`; assignee must be a project member; assignee (or ADMIN) can update status
 - **Isolation:** non-admins only access teams/projects/tasks they belong to
+- **Pagination:** `page` / `limit` / `sortBy` / `order` on list endpoints — `{ data, meta }` envelope, `limit` capped at 100, sort fields whitelisted per resource
 - **Admin:** create users and change roles (`/admin/users`, ADMIN only)
 
 ---
@@ -127,6 +128,8 @@ Full reference: Swagger UI at `/docs`.
 | Tasks | CRUD `/tasks` (`?projectId=`), `PATCH /tasks/:id/status` |
 | Admin | `GET/POST /admin/users`, `PATCH /admin/users/:id/role` |
 
+List endpoints (`GET /teams`, `/projects`, `/tasks`) are paginated: `?page=1&limit=20&sortBy=id&order=asc` (sort fields whitelisted per resource, `limit` max 100) and return `{ "data": [...], "meta": { "page", "limit", "total", "totalPages" } }`.
+
 **Example flow**
 
 1. Register and login → copy `access_token`
@@ -151,6 +154,7 @@ E2E coverage today:
 
 - **Auth:** register/login tokens, unauthenticated 401, 401 after logout, refresh rotation (old refresh token rejected), invalid refresh 401
 - **Teams:** USER cannot create (403); MANAGER create/list/get; non-member isolation (403 / omitted from list); add member, duplicate 409, unknown user 404
+- **Pagination:** `{ data, meta }` envelope with defaults, page slicing under filters, sort whitelist rejection, `limit` cap and `page`/`order`/filter validation (400s)
 
 ---
 
