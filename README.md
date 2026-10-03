@@ -28,6 +28,7 @@ docker compose up --build -d
 ## Features
 
 - **Auth:** register, login, refresh, logout
+- **Rate limits:** auth endpoints throttled per IP (in-memory) — login 5/min, register 5/hour, refresh 20/min; excess requests get `429`
 - **Roles:** `ADMIN`, `MANAGER`, `USER` (`RolesGuard` + `@Roles`)
 - **Teams:** create, list, get, add/list members (creator is auto-added)
 - **Projects:** CRUD under a team; members must already belong to the team
@@ -155,6 +156,7 @@ E2E coverage today:
 - **Auth:** register/login tokens, unauthenticated 401, 401 after logout, refresh rotation (old refresh token rejected), invalid refresh 401
 - **Teams:** USER cannot create (403); MANAGER create/list/get; non-member isolation (403 / omitted from list); add member, duplicate 409, unknown user 404
 - **Pagination:** `{ data, meta }` envelope with defaults, page slicing under filters, sort whitelist rejection, `limit` cap and `page`/`order`/filter validation (400s)
+- **Rate limiting:** login 429 after the per-IP limit (even with valid credentials), non-auth endpoints unaffected, registration capped at 5/hour
 
 ---
 
