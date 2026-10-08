@@ -105,7 +105,7 @@ export class ProjectService {
     await this.prisma.$transaction([
       this.prisma.task.updateMany({
         where: { projectId: id },
-        data: { projectId: undefined },
+        data: { projectId: null },
       }),
       this.prisma.projectMember.deleteMany({ where: { projectId: id } }),
       this.prisma.project.delete({ where: { id } }),

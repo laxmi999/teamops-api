@@ -4,9 +4,24 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { setupSwagger } from './swagger';
 
+function assertRequiredEnv() {
+  const required = ['DATABASE_URL', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
+  const missing = required.filter((name) => !process.env[name]);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(', ')}. ` +
+        'Copy backend/.env.example to backend/.env and fill them in.',
+    );
+  }
+}
+
 async function bootstrap() {
+  assertRequiredEnv();
+
   const app = await NestFactory.create(AppModule);
 
+  app.enableShutdownHooks();
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
