@@ -4,9 +4,13 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserService } from '../users/user.service';
 import * as bcrypt from 'bcrypt';
+import type { StringValue } from 'ms';
 import { JwtPayload } from './types/jwt-payload.interface';
 import { RegisterDto } from './dto/register.dto';
 import { Actor } from '../common/types/actor.type';
+
+const REFRESH_EXPIRES_IN: StringValue =
+  (process.env.JWT_REFRESH_EXPIRES_IN as StringValue) || '7d';
 
 @Injectable()
 export class AuthService {
@@ -44,7 +48,7 @@ export class AuthService {
       { ...payload, jti: randomUUID() },
       {
         secret: process.env.JWT_REFRESH_SECRET,
-        expiresIn: '7d',
+        expiresIn: REFRESH_EXPIRES_IN,
       },
     );
 
@@ -93,7 +97,7 @@ export class AuthService {
         { ...newPayload, jti: randomUUID() },
         {
           secret: process.env.JWT_REFRESH_SECRET,
-          expiresIn: '7d',
+          expiresIn: REFRESH_EXPIRES_IN,
         },
       );
 
