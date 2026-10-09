@@ -12,7 +12,8 @@ describe('Rate limiting (e2e)', () => {
   const stamp = Date.now();
   const password = 'password123';
   const mainEmail = `e2e-rl-main-${stamp}@example.com`;
-  const emailPrefix = `e2e-rl-${stamp}`;
+  // Common prefix of every email this spec creates (main + numbered users).
+  const emailPrefix = 'e2e-rl-';
 
   let token: string;
 
